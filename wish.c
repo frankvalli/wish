@@ -7,19 +7,25 @@ char prompt[7] = "wish> ";
 char error_message[30] = "An error has occurred\n";
 
 int main(int argc, char *argv[]) {
-    if (argc > 2) { // exit if more than one argument
-        write(STDERR_FILENO, error_message, strlen(error_message));
-        exit(1);
-    } else if (argc == 2) {
-        FILE *batch = fopen(argv[1], "r");
-        if (batch == NULL) { // exit if bad argument
+    switch (argc) {
+        case 1:
+            read_from_terminal();
+            break;
+        case 2:
+            FILE *batch = fopen(argv[1], "r");
+            if (batch == NULL) { // exit if bad argument
+                write(STDERR_FILENO, error_message, strlen(error_message));
+                exit(1);
+            }
+            read_from_file(batch);
+            fclose(batch);
+            break; // close wish after reading from file
+        case 3:
             write(STDERR_FILENO, error_message, strlen(error_message));
             exit(1);
-        }
-        read_from_file(batch);
-        fclose(batch);
+            break;
     }
-    read_from_terminal();
+    return 0;
 }
 
 void main_loop(char **buffer, char ***path) {
@@ -30,8 +36,9 @@ void main_loop(char **buffer, char ***path) {
         if (!is_valid(cmd)) {
             write(STDERR_FILENO, error_message, strlen(error_message));
             continue;
+        } else if (num_args(cmd) != 0) {
+            execute_command(cmd, path); // execute command
         }
-        execute_command(cmd, path); // execute command
         destroy_command(&cmd); // destroy command
     }
     while(wait(NULL) > 0); // wait until all sub processes are done
@@ -39,32 +46,26 @@ void main_loop(char **buffer, char ***path) {
 }
 
 void read_from_terminal() {
-    char *buffer;
+    char *buffer = NULL; // set pointer to NULL to make sure getline allocates memory
     char **path = init_path();
     size_t size;
 
     while (1) {
         write(STDOUT_FILENO, prompt, strlen(prompt)); // write "wish> " to terminal
         getline(&buffer, &size, stdin); // read line
-        if (buffer[strlen(buffer) - 1] == '\n') {
-            buffer[strlen(buffer) - 1] = '\0';
-        }
+        buffer[strlen(buffer) - 1] = '\0'; // all commands end with a newline when written in terminal
         main_loop(&buffer, &path);
     }
     return;
 }
 
 void read_from_file(FILE *batch) {
-    char *buffer;
+    char *buffer = NULL; // set pointer to NULL to make sure getline allocates memory
     char **path = init_path();
     size_t size;
 
-    while (getline(&buffer, &size, batch) >= 0) { // print input file
-        write(STDOUT_FILENO, buffer, strlen(buffer));
-    }
-    rewind(batch);
     while (getline(&buffer, &size, batch) >= 0) { // execute all commands in file
-        if (buffer[strlen(buffer) - 1] == '\n') {
+        if (buffer[strlen(buffer) - 1] == '\n') { // getline also reads the newline character
             buffer[strlen(buffer) - 1] = '\0';
         }
         main_loop(&buffer, &path);
