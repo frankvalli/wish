@@ -18,15 +18,20 @@ command_t *parse_command(char **buffer) {
         case 1: // if there is one '>' character parse args and dest separately
             dest = cmd_str;
             args = strsep(&dest, ">"); // now dest points at start of string after '>'
-            cmd = parse_command(&args); // push arguments to command
-            int d_count = 0;
+            cmd = init_command();
+            while ((arg = strsep(&args, " \t")) != NULL) { // push arguments one by one
+                if ((arg[0] == '\0')) continue;
+                push_arg(cmd, arg);
+            }
             while ((arg = strsep(&dest, " \t")) != NULL) { // push destinations one by one
                 if ((arg[0] == '\0')) continue;
                 push_dest(cmd, arg);
-                d_count++;
-                if (d_count > 1) return NULL; // return NULL if there's more than one destination
             }
-            return cmd;
+            if ((num_args(cmd) == 0) | (num_dests(cmd) != 1)) { // if no arguments or not one destination return NULL
+                destroy_command(&cmd);
+                return NULL;
+            }
+            return cmd; // return NULL if number of redirections != 1
         default: // return NULL if there's more than one '>' character
             return NULL;
     }
