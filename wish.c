@@ -46,6 +46,9 @@ void read_from_terminal() {
     while (1) {
         write(STDOUT_FILENO, prompt, strlen(prompt)); // write "wish> " to terminal
         getline(&buffer, &size, stdin); // read line
+        if (buffer[strlen(buffer) - 1] == '\n') {
+            buffer[strlen(buffer) - 1] = '\0';
+        }
         main_loop(&buffer);
     }
     return;
@@ -60,6 +63,9 @@ void read_from_file(FILE *batch) {
     }
     rewind(batch);
     while (getline(&buffer, &size, batch) >= 0) { // execute all commands in file
+        if (buffer[strlen(buffer) - 1] == '\n') {
+            buffer[strlen(buffer) - 1] = '\0';
+        }
         main_loop(&buffer);
     }
     return;
