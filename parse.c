@@ -16,7 +16,6 @@ command_t *parse_command(char **buffer) {
             }
             return cmd;
         case 1: // if there is one '>' character parse args and dest separately
-            cmd = init_command();
             dest = cmd_str;
             args = strsep(&dest, ">"); // now dest points at start of string after '>'
             cmd = parse_command(&args); // push arguments to command
