@@ -16,4 +16,8 @@ void push_dest(command_t *cmd, char *dest);
 
 void destroy_command(command_t **cmd);
 
+int num_args(command_t *cmd);
+
+int num_dests(command_t *cmd);
+
 #endif

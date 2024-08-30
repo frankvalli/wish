@@ -10,7 +10,7 @@
 
 extern char error_message[30];
 
-void main_loop(char **buffer);
+void main_loop(char **buffer, char ***path);
 
 void read_from_terminal();
 

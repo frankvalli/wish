@@ -22,9 +22,8 @@ int main(int argc, char *argv[]) {
     read_from_terminal();
 }
 
-void main_loop(char **buffer) {
+void main_loop(char **buffer, char ***path) {
     command_t *cmd;
-    char **path = init_path();
     char *tmp = *buffer; // save buffer to free it later
     while (*buffer != NULL) { // repeat until entire line has been read
         cmd = parse_command(buffer); // parse until next '&' character
@@ -41,6 +40,7 @@ void main_loop(char **buffer) {
 
 void read_from_terminal() {
     char *buffer;
+    char **path = init_path();
     size_t size;
 
     while (1) {
@@ -49,13 +49,14 @@ void read_from_terminal() {
         if (buffer[strlen(buffer) - 1] == '\n') {
             buffer[strlen(buffer) - 1] = '\0';
         }
-        main_loop(&buffer);
+        main_loop(&buffer, &path);
     }
     return;
 }
 
 void read_from_file(FILE *batch) {
     char *buffer;
+    char **path = init_path();
     size_t size;
 
     while (getline(&buffer, &size, batch) >= 0) { // print input file
@@ -66,7 +67,7 @@ void read_from_file(FILE *batch) {
         if (buffer[strlen(buffer) - 1] == '\n') {
             buffer[strlen(buffer) - 1] = '\0';
         }
-        main_loop(&buffer);
+        main_loop(&buffer, &path);
     }
     return;
 }
