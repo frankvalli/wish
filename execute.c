@@ -14,8 +14,7 @@ char **init_path() {
 }
 
 bool is_valid(command_t *cmd) {
-    if ((cmd == NULL) | (num_dests(cmd) > 1)) return false;
-    return true;
+    return cmd == NULL ? false : true;
 }
 
 void execute_command(command_t *cmd, char ***path) {
@@ -56,11 +55,11 @@ void execute_program(command_t *cmd, char **path) {
         return;
     }
 
-    int saved_stdout = dup(STDOUT_FILENO);
-    int saved_stderr = dup(STDERR_FILENO);
+    int saved_stdout = dup(STDOUT_FILENO); // duplicate stdout original file descriptor
+    int saved_stderr = dup(STDERR_FILENO); // duplicate stderr original file descriptor
     if (num_dests(cmd) == 1) {
-        freopen(cmd -> dest[0], "w", stdout);
-        freopen(cmd -> dest[0], "w", stderr);
+        freopen(cmd -> dest[0], "w", stdout); // associate stdout to destination file
+        freopen(cmd -> dest[0], "w", stderr); // associate stderr to destination file
     }
     int rc = fork();
     if (rc < 0) {
@@ -68,12 +67,12 @@ void execute_program(command_t *cmd, char **path) {
         exit(1);
     } else if (rc == 0) {
         execv(cmd_path, cmd -> args);
-        write(STDERR_FILENO, error_message, strlen(error_message));
+        write(STDERR_FILENO, error_message, strlen(error_message)); // error if something wrong happens
         exit(0);
     }
     if (num_dests(cmd) == 1) {
-        dup2(saved_stdout, STDOUT_FILENO);
-        dup2(saved_stderr, STDERR_FILENO);
+        dup2(saved_stdout, STDOUT_FILENO); // restore stdout original file descriptor
+        dup2(saved_stderr, STDERR_FILENO); // restore stderr original file descriptor
     }
 }
 
@@ -102,7 +101,7 @@ void builtin_path(command_t *cmd, char ***path) {
         exit(1);
     }
     for (int i = 0; i < num_args(cmd) - 1; i++) {
-        if (enumerate_characters(cmd -> args[i], '/') == 0) {
+        if (enumerate_characters(cmd -> args[i + 1], '/') == 0) { // use relative path if no '/' are present
             char *buffer = (char *) malloc(256 * sizeof(char));
             if (buffer == NULL) {
                 write(STDERR_FILENO, error_message, strlen(error_message));
@@ -110,7 +109,7 @@ void builtin_path(command_t *cmd, char ***path) {
             }
             getcwd(buffer, 256 * sizeof(char));
             strcat(buffer, "/");
-            strcat(buffer, cmd -> args[i]);
+            strcat(buffer, cmd -> args[i + 1]);
             new_path[i] = strdup(buffer);
             free(buffer);
         } else new_path[i] = strdup(cmd -> args[i + 1]);
